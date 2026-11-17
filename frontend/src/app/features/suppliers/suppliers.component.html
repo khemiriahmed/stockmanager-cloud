@@ -1,0 +1,84 @@
+<div class="page">
+  <app-page-header title="Fournisseurs" subtitle="Votre réseau d'approvisionnement et ses contacts.">
+    @if (auth.canManageCatalog()) {
+      <button mat-flat-button color="primary" type="button" (click)="openDialog()">
+        <mat-icon>add</mat-icon>
+        Nouveau fournisseur
+      </button>
+    }
+  </app-page-header>
+
+  <div class="card">
+    <div class="toolbar">
+      <mat-form-field appearance="outline" class="search" subscriptSizing="dynamic">
+        <mat-icon matPrefix>search</mat-icon>
+        <input matInput [formControl]="search" placeholder="Rechercher un fournisseur..." />
+      </mat-form-field>
+    </div>
+
+    @if (loading()) {
+      <div class="loading"><mat-spinner diameter="36" /></div>
+    } @else if (items().length === 0) {
+      <div class="empty-state">
+        <mat-icon>local_shipping</mat-icon>
+        <span>Aucun fournisseur trouvé.</span>
+      </div>
+    } @else {
+      <div class="table-wrap">
+        <table class="full-table">
+          <thead>
+            <tr>
+              <th>Fournisseur</th>
+              <th>Contact</th>
+              <th>Adresse</th>
+              <th>Statut</th>
+              @if (auth.canManageCatalog()) {
+                <th>Actions</th>
+              }
+            </tr>
+          </thead>
+          <tbody>
+            @for (supplier of items(); track supplier.id) {
+              <tr>
+                <td>
+                  <div class="cell-main">
+                    <strong>{{ supplier.name }}</strong>
+                    <small>{{ supplier.company || 'Sans société' }}</small>
+                  </div>
+                </td>
+                <td>
+                  <div class="cell-main">
+                    <span>{{ supplier.email || '—' }}</span>
+                    <small>{{ supplier.phone || '—' }}</small>
+                  </div>
+                </td>
+                <td class="muted">{{ supplier.address || '—' }}</td>
+                <td>
+                  <span class="status-badge" [ngClass]="supplier.active ? 'status-active' : 'status-inactive'">
+                    {{ supplier.active ? 'Actif' : 'Inactif' }}
+                  </span>
+                </td>
+                @if (auth.canManageCatalog()) {
+                  <td>
+                    <div class="actions-cell">
+                      <button mat-icon-button type="button" (click)="openDialog(supplier)" aria-label="Modifier">
+                        <mat-icon>edit</mat-icon>
+                      </button>
+                      <button mat-icon-button type="button" (click)="toggle(supplier)" aria-label="Changer le statut">
+                        <mat-icon>{{ supplier.active ? 'toggle_on' : 'toggle_off' }}</mat-icon>
+                      </button>
+                      <button mat-icon-button type="button" color="warn" (click)="confirmDelete(supplier)" aria-label="Désactiver">
+                        <mat-icon>delete_outline</mat-icon>
+                      </button>
+                    </div>
+                  </td>
+                }
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <app-pager [page]="page()" [totalPages]="totalPages()" [total]="total()" (pageChange)="load($event)" />
+    }
+  </div>
+</div>
