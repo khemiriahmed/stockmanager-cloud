@@ -1,0 +1,74 @@
+<div class="page">
+  <app-page-header title="Entrepôts" subtitle="Les sites physiques qui hébergent vos stocks.">
+    @if (auth.canManageCatalog()) {
+      <button mat-flat-button color="primary" type="button" (click)="openDialog()">
+        <mat-icon>add</mat-icon>
+        Nouvel entrepôt
+      </button>
+    }
+  </app-page-header>
+
+  <div class="card">
+    <div class="toolbar">
+      <mat-form-field appearance="outline" class="search" subscriptSizing="dynamic">
+        <mat-icon matPrefix>search</mat-icon>
+        <input matInput [formControl]="search" placeholder="Rechercher un entrepôt..." />
+      </mat-form-field>
+    </div>
+
+    @if (loading()) {
+      <div class="loading"><mat-spinner diameter="36" /></div>
+    } @else if (items().length === 0) {
+      <div class="empty-state">
+        <mat-icon>warehouse</mat-icon>
+        <span>Aucun entrepôt trouvé.</span>
+      </div>
+    } @else {
+      <div class="table-wrap">
+        <table class="full-table">
+          <thead>
+            <tr>
+              <th>Nom</th>
+              <th>Responsable</th>
+              <th>Adresse</th>
+              <th>Statut</th>
+              @if (auth.canManageCatalog()) {
+                <th>Actions</th>
+              }
+            </tr>
+          </thead>
+          <tbody>
+            @for (warehouse of items(); track warehouse.id) {
+              <tr>
+                <td><strong>{{ warehouse.name }}</strong></td>
+                <td>{{ warehouse.manager || '—' }}</td>
+                <td class="muted">{{ warehouse.address || '—' }}</td>
+                <td>
+                  <span class="status-badge" [ngClass]="warehouse.active ? 'status-active' : 'status-inactive'">
+                    {{ warehouse.active ? 'Actif' : 'Inactif' }}
+                  </span>
+                </td>
+                @if (auth.canManageCatalog()) {
+                  <td>
+                    <div class="actions-cell">
+                      <button mat-icon-button type="button" (click)="openDialog(warehouse)" aria-label="Modifier">
+                        <mat-icon>edit</mat-icon>
+                      </button>
+                      <button mat-icon-button type="button" (click)="toggle(warehouse)" aria-label="Changer le statut">
+                        <mat-icon>{{ warehouse.active ? 'toggle_on' : 'toggle_off' }}</mat-icon>
+                      </button>
+                      <button mat-icon-button type="button" color="warn" (click)="confirmDelete(warehouse)" aria-label="Désactiver">
+                        <mat-icon>delete_outline</mat-icon>
+                      </button>
+                    </div>
+                  </td>
+                }
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <app-pager [page]="page()" [totalPages]="totalPages()" [total]="total()" (pageChange)="load($event)" />
+    }
+  </div>
+</div>
