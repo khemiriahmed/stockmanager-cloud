@@ -1,0 +1,72 @@
+<div class="page">
+  <app-page-header title="Catégories" subtitle="Organisez votre catalogue produits par famille.">
+    @if (auth.canManageCatalog()) {
+      <button mat-flat-button color="primary" type="button" (click)="openDialog()">
+        <mat-icon>add</mat-icon>
+        Nouvelle catégorie
+      </button>
+    }
+  </app-page-header>
+
+  <div class="card">
+    <div class="toolbar">
+      <mat-form-field appearance="outline" class="search" subscriptSizing="dynamic">
+        <mat-icon matPrefix>search</mat-icon>
+        <input matInput [formControl]="search" placeholder="Rechercher une catégorie..." />
+      </mat-form-field>
+    </div>
+
+    @if (loading()) {
+      <div class="loading"><mat-spinner diameter="36" /></div>
+    } @else if (items().length === 0) {
+      <div class="empty-state">
+        <mat-icon>category</mat-icon>
+        <span>Aucune catégorie trouvée.</span>
+      </div>
+    } @else {
+      <div class="table-wrap">
+        <table class="full-table">
+          <thead>
+            <tr>
+              <th>Nom</th>
+              <th>Description</th>
+              <th>Statut</th>
+              @if (auth.canManageCatalog()) {
+                <th class="right">Actions</th>
+              }
+            </tr>
+          </thead>
+          <tbody>
+            @for (category of items(); track category.id) {
+              <tr>
+                <td><strong>{{ category.name }}</strong></td>
+                <td class="muted">{{ category.description || '—' }}</td>
+                <td>
+                  <span class="status-badge" [ngClass]="category.active ? 'status-active' : 'status-inactive'">
+                    {{ category.active ? 'Active' : 'Inactive' }}
+                  </span>
+                </td>
+                @if (auth.canManageCatalog()) {
+                  <td>
+                    <div class="actions-cell">
+                      <button mat-icon-button type="button" (click)="openDialog(category)" aria-label="Modifier">
+                        <mat-icon>edit</mat-icon>
+                      </button>
+                      <button mat-icon-button type="button" (click)="toggle(category)" [attr.aria-label]="category.active ? 'Désactiver' : 'Activer'">
+                        <mat-icon>{{ category.active ? 'toggle_on' : 'toggle_off' }}</mat-icon>
+                      </button>
+                      <button mat-icon-button type="button" color="warn" (click)="confirmDelete(category)" aria-label="Supprimer">
+                        <mat-icon>delete_outline</mat-icon>
+                      </button>
+                    </div>
+                  </td>
+                }
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <app-pager [page]="page()" [totalPages]="totalPages()" [total]="total()" (pageChange)="load($event)" />
+    }
+  </div>
+</div>
