@@ -1,0 +1,84 @@
+<div class="page">
+  <app-page-header title="Clients" subtitle="Votre portefeuille client et les coordonnées de facturation.">
+    @if (auth.canManageCatalog()) {
+      <button mat-flat-button color="primary" type="button" (click)="openDialog()">
+        <mat-icon>person_add</mat-icon>
+        Nouveau client
+      </button>
+    }
+  </app-page-header>
+
+  <div class="card">
+    <div class="toolbar">
+      <mat-form-field appearance="outline" class="search" subscriptSizing="dynamic">
+        <mat-icon matPrefix>search</mat-icon>
+        <input matInput [formControl]="search" placeholder="Rechercher un client..." />
+      </mat-form-field>
+    </div>
+
+    @if (loading()) {
+      <div class="loading"><mat-spinner diameter="36" /></div>
+    } @else if (items().length === 0) {
+      <div class="empty-state">
+        <mat-icon>groups</mat-icon>
+        <span>Aucun client trouvé.</span>
+      </div>
+    } @else {
+      <div class="table-wrap">
+        <table class="full-table">
+          <thead>
+            <tr>
+              <th>Client</th>
+              <th>Contact</th>
+              <th>Adresse</th>
+              <th>Statut</th>
+              @if (auth.canManageCatalog()) {
+                <th>Actions</th>
+              }
+            </tr>
+          </thead>
+          <tbody>
+            @for (customer of items(); track customer.id) {
+              <tr>
+                <td>
+                  <div class="cell-main">
+                    <strong>{{ customer.name }}</strong>
+                    <small>{{ customer.company || 'Particulier' }}</small>
+                  </div>
+                </td>
+                <td>
+                  <div class="cell-main">
+                    <span>{{ customer.email || '—' }}</span>
+                    <small>{{ customer.phone || '—' }}</small>
+                  </div>
+                </td>
+                <td class="muted">{{ customer.address || '—' }}</td>
+                <td>
+                  <span class="status-badge" [ngClass]="customer.active ? 'status-active' : 'status-inactive'">
+                    {{ customer.active ? 'Actif' : 'Inactif' }}
+                  </span>
+                </td>
+                @if (auth.canManageCatalog()) {
+                  <td>
+                    <div class="actions-cell">
+                      <button mat-icon-button type="button" (click)="openDialog(customer)" aria-label="Modifier">
+                        <mat-icon>edit</mat-icon>
+                      </button>
+                      <button mat-icon-button type="button" (click)="toggle(customer)" aria-label="Changer le statut">
+                        <mat-icon>{{ customer.active ? 'toggle_on' : 'toggle_off' }}</mat-icon>
+                      </button>
+                      <button mat-icon-button type="button" color="warn" (click)="confirmDelete(customer)" aria-label="Désactiver">
+                        <mat-icon>delete_outline</mat-icon>
+                      </button>
+                    </div>
+                  </td>
+                }
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <app-pager [page]="page()" [totalPages]="totalPages()" [total]="total()" (pageChange)="load($event)" />
+    }
+  </div>
+</div>

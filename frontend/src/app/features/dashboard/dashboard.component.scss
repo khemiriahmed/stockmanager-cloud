@@ -1,0 +1,176 @@
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.kpi {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px;
+}
+
+.kpi-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 13px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+}
+
+.kpi-icon.blue {
+  background: #e7eeff;
+  color: #3f5efb;
+}
+
+.kpi-icon.green {
+  background: #e3f9f1;
+  color: #0c8f6a;
+}
+
+.kpi-icon.orange {
+  background: #fff2dc;
+  color: #b26a00;
+}
+
+.kpi-icon.violet {
+  background: #efe8ff;
+  color: #6f42c1;
+}
+
+.kpi-label {
+  display: block;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  color: var(--sm-muted);
+  font-weight: 600;
+}
+
+.kpi-value {
+  font-size: 23px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  display: block;
+  line-height: 1.2;
+}
+
+.kpi-hint {
+  font-size: 11px;
+  color: var(--sm-muted);
+}
+
+.main-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  gap: 16px;
+}
+
+.bottom-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+mat-card {
+  border-radius: 16px !important;
+  overflow: hidden;
+}
+
+.card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 20px 8px;
+}
+
+.card-head h2 {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.card-head p {
+  margin: 3px 0 0;
+  font-size: 12px;
+  color: var(--sm-muted);
+}
+
+.head-icon {
+  color: #c2ccdf;
+}
+
+.chart-wrap {
+  height: 300px;
+  padding: 8px 16px 18px;
+}
+
+.status-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 8px 20px;
+}
+
+.status-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.status-row strong {
+  font-size: 15px;
+}
+
+.mini-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  margin: 10px 16px 16px;
+  border-top: 1px solid var(--sm-border);
+  padding-top: 14px;
+}
+
+.mini-stats div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: center;
+}
+
+.mini-stats span {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--sm-muted);
+}
+
+.mini-stats strong {
+  font-size: 17px;
+}
+
+.qty.danger {
+  color: #c92a2a;
+  font-weight: 700;
+}
+
+.clickable {
+  cursor: pointer;
+}
+
+@media (max-width: 1150px) {
+  .kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .main-grid,
+  .bottom-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .kpi-grid {
+    grid-template-columns: 1fr;
+  }
+}

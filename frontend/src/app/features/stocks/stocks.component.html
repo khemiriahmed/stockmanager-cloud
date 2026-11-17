@@ -1,0 +1,191 @@
+<div class="page">
+  <app-page-header title="Stocks & mouvements" subtitle="Niveaux disponibles, alertes et historique des opérations.">
+    <button mat-stroked-button type="button" (click)="openOperation('entry')">
+      <mat-icon>arrow_downward</mat-icon>
+      Entrée
+    </button>
+    <button mat-stroked-button type="button" (click)="openOperation('exit')">
+      <mat-icon>arrow_upward</mat-icon>
+      Sortie
+    </button>
+    @if (auth.canManageCatalog()) {
+      <button mat-stroked-button type="button" (click)="openOperation('transfer')">
+        <mat-icon>swap_horiz</mat-icon>
+        Transfert
+      </button>
+      <button mat-flat-button color="primary" type="button" (click)="openOperation('adjustment')">
+        <mat-icon>tune</mat-icon>
+        Ajustement
+      </button>
+    }
+  </app-page-header>
+
+  <div class="card">
+    <mat-tab-group animationDuration="150ms">
+      <mat-tab label="Niveaux de stock">
+        <div class="toolbar">
+          <mat-form-field appearance="outline" class="search" subscriptSizing="dynamic">
+            <mat-icon matPrefix>search</mat-icon>
+            <input matInput [formControl]="search" placeholder="Produit ou entrepôt..." />
+          </mat-form-field>
+        </div>
+        @if (loadingStocks()) {
+          <div class="loading"><mat-spinner diameter="36" /></div>
+        } @else if (stocks().length === 0) {
+          <div class="empty-state">
+            <mat-icon>inventory</mat-icon>
+            <span>Aucun niveau de stock enregistré.</span>
+          </div>
+        } @else {
+          <div class="table-wrap">
+            <table class="full-table">
+              <thead>
+                <tr>
+                  <th>Produit</th>
+                  <th>Entrepôt</th>
+                  <th>Quantité</th>
+                  <th>Réservé</th>
+                  <th>Disponible</th>
+                  <th>Seuil</th>
+                  <th>État</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (stock of stocks(); track stock.id) {
+                  <tr>
+                    <td>
+                      <div class="cell-main">
+                        <strong>{{ stock.productName }}</strong>
+                        <small>{{ stock.productReference }}</small>
+                      </div>
+                    </td>
+                    <td>{{ stock.warehouseName }}</td>
+                    <td>{{ stock.quantity }}</td>
+                    <td>{{ stock.reservedQuantity }}</td>
+                    <td><strong>{{ stock.availableQuantity }}</strong></td>
+                    <td>{{ stock.alertThreshold }}</td>
+                    <td>
+                      <span class="status-badge" [ngClass]="stock.lowStock ? 'status-inactive' : 'status-active'">
+                        {{ stock.lowStock ? 'Alerte' : 'OK' }}
+                      </span>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          <app-pager [page]="stockPage()" [totalPages]="stockTotalPages()" [total]="stockTotal()" (pageChange)="loadStocks($event)" />
+        }
+      </mat-tab>
+
+      <mat-tab>
+        <ng-template mat-tab-label>
+          <span class="tab-warning">Alertes ({{ lowTotal() }})</span>
+        </ng-template>
+        @if (loadingLow()) {
+          <div class="loading"><mat-spinner diameter="36" /></div>
+        } @else if (lowStocks().length === 0) {
+          <div class="empty-state">
+            <mat-icon>check_circle</mat-icon>
+            <span>Aucune alerte : tous les stocks sont au-dessus des seuils.</span>
+          </div>
+        } @else {
+          <div class="table-wrap">
+            <table class="full-table">
+              <thead>
+                <tr>
+                  <th>Produit</th>
+                  <th>Entrepôt</th>
+                  <th>Disponible</th>
+                  <th>Réservé</th>
+                  <th>Seuil</th>
+                  <th>Manquant</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (stock of lowStocks(); track stock.id) {
+                  <tr>
+                    <td>
+                      <div class="cell-main">
+                        <strong>{{ stock.productName }}</strong>
+                        <small>{{ stock.productReference }}</small>
+                      </div>
+                    </td>
+                    <td>{{ stock.warehouseName }}</td>
+                    <td class="danger-text">{{ stock.availableQuantity }}</td>
+                    <td>{{ stock.reservedQuantity }}</td>
+                    <td>{{ stock.alertThreshold }}</td>
+                    <td>{{ stock.alertThreshold - stock.availableQuantity }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          <app-pager [page]="lowPage()" [totalPages]="lowTotalPages()" [total]="lowTotal()" (pageChange)="loadLowStock($event)" />
+        }
+      </mat-tab>
+
+      <mat-tab label="Mouvements">
+        <div class="toolbar">
+          <mat-form-field appearance="outline" class="filter" subscriptSizing="dynamic">
+            <mat-label>Type de mouvement</mat-label>
+            <mat-select [formControl]="typeFilter">
+              <mat-option value="ALL">Tous</mat-option>
+              <mat-option value="IN">Entrées</mat-option>
+              <mat-option value="OUT">Sorties</mat-option>
+              <mat-option value="TRANSFER">Transferts</mat-option>
+              <mat-option value="ADJUSTMENT">Ajustements</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+        @if (loadingMovements()) {
+          <div class="loading"><mat-spinner diameter="36" /></div>
+        } @else if (movements().length === 0) {
+          <div class="empty-state">
+            <mat-icon>history</mat-icon>
+            <span>Aucun mouvement enregistré.</span>
+          </div>
+        } @else {
+          <div class="table-wrap">
+            <table class="full-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Type</th>
+                  <th>Produit</th>
+                  <th>Entrepôt</th>
+                  <th>Quantité</th>
+                  <th>Motif</th>
+                  <th>Opérateur</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (movement of movements(); track movement.id) {
+                  <tr>
+                    <td>{{ movement.createdAt | date: 'dd/MM/yyyy HH:mm' }}</td>
+                    <td>
+                      <span class="move-badge" [ngClass]="'move-' + movement.type.toLowerCase()">
+                        {{ movementLabel(movement.type) }}
+                      </span>
+                    </td>
+                    <td>
+                      <div class="cell-main">
+                        <strong>{{ movement.productName }}</strong>
+                        <small>{{ movement.productReference }}</small>
+                      </div>
+                    </td>
+                    <td>{{ movementDirection(movement) }}</td>
+                    <td><strong>{{ movement.quantity }}</strong></td>
+                    <td class="muted">{{ movement.reason || '—' }}</td>
+                    <td>{{ movement.createdBy || '—' }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          <app-pager [page]="movePage()" [totalPages]="moveTotalPages()" [total]="moveTotal()" (pageChange)="loadMovements($event)" />
+        }
+      </mat-tab>
+    </mat-tab-group>
+  </div>
+</div>

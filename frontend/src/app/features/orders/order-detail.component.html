@@ -1,0 +1,150 @@
+<div class="page">
+  <app-page-header title="Détail de la commande" subtitle="Suivi, lignes et actions disponibles.">
+    <a mat-stroked-button routerLink="/orders">
+      <mat-icon>arrow_back</mat-icon>
+      Retour
+    </a>
+  </app-page-header>
+
+  @if (loading()) {
+    <div class="loading"><mat-spinner diameter="42" /></div>
+  } @else {
+    @if (order(); as order) {
+    <div class="detail-head card card-pad">
+      <div class="head-left">
+        <div>
+          <span class="ref">{{ order.reference }}</span>
+          <span class="status-badge" [ngClass]="'status-' + order.status.toLowerCase()">
+            {{ statusLabel(order.status) }}
+          </span>
+        </div>
+        <p>
+          Créée le {{ order.createdAt | date: 'dd/MM/yyyy à HH:mm' }} par {{ order.createdBy || '—' }}
+        </p>
+      </div>
+      <div class="head-actions">
+        @if (can('confirm')) {
+          <button mat-flat-button color="primary" type="button" [disabled]="busy()" (click)="runAction('confirm')">
+            <mat-icon>check_circle</mat-icon>
+            Confirmer
+          </button>
+        }
+        @if (can('process')) {
+          <button mat-stroked-button type="button" [disabled]="busy()" (click)="runAction('process')">
+            <mat-icon>inventory</mat-icon>
+            Préparer
+          </button>
+        }
+        @if (can('ship')) {
+          <button mat-stroked-button type="button" [disabled]="busy()" (click)="runAction('ship')">
+            <mat-icon>local_shipping</mat-icon>
+            Expédier
+          </button>
+        }
+        @if (can('deliver')) {
+          <button mat-flat-button color="primary" type="button" [disabled]="busy()" (click)="runAction('deliver')">
+            <mat-icon>task_alt</mat-icon>
+            Livrer
+          </button>
+        }
+        @if (can('cancel')) {
+          <button mat-stroked-button color="warn" type="button" [disabled]="busy()" (click)="runAction('cancel')">
+            <mat-icon>cancel</mat-icon>
+            Annuler
+          </button>
+        }
+        @if (order.status === 'DELIVERED') {
+          <a mat-flat-button color="primary" routerLink="/invoices">
+            <mat-icon>request_quote</mat-icon>
+            Voir la facture
+          </a>
+        }
+      </div>
+    </div>
+
+    <div class="detail-grid">
+      <div class="main-column">
+        <div class="card">
+          <div class="card-title">
+            <h2>Lignes de commande</h2>
+            <span>{{ order.items.length }} ligne{{ order.items.length > 1 ? 's' : '' }}</span>
+          </div>
+          <div class="table-wrap">
+            <table class="full-table">
+              <thead>
+                <tr>
+                  <th>Produit</th>
+                  <th>Entrepôt</th>
+                  <th>Prix unitaire</th>
+                  <th>Qté</th>
+                  <th>Total HT</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (item of order.items; track item.id) {
+                  <tr>
+                    <td>
+                      <div class="cell-main">
+                        <strong>{{ item.productName }}</strong>
+                        <small>{{ item.productReference }}</small>
+                      </div>
+                    </td>
+                    <td>{{ item.warehouseName }}</td>
+                    <td class="money">{{ item.unitPrice | currency: 'EUR' }}</td>
+                    <td>{{ item.quantity }}</td>
+                    <td class="money">{{ item.lineTotal | currency: 'EUR' }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          <div class="totals">
+            <div><span>Total HT</span><strong>{{ order.totalHt | currency: 'EUR' }}</strong></div>
+            <div><span>TVA ({{ order.vatRate }}%)</span><strong>{{ order.totalVat | currency: 'EUR' }}</strong></div>
+            <div class="ttc"><span>Total TTC</span><strong>{{ order.totalTtc | currency: 'EUR' }}</strong></div>
+          </div>
+        </div>
+
+        @if (order.notes) {
+          <div class="card card-pad">
+            <h2 class="section-title">Notes internes</h2>
+            <p class="notes">{{ order.notes }}</p>
+          </div>
+        }
+      </div>
+
+      <div class="side-column">
+        <div class="card card-pad">
+          <h2 class="section-title">Client</h2>
+          <div class="customer">
+            <div class="avatar">{{ order.customerName.charAt(0) }}</div>
+            <div>
+              <strong>{{ order.customerName }}</strong>
+              <span>{{ order.customerCompany || 'Particulier' }}</span>
+            </div>
+          </div>
+          <div class="info-list">
+            <div><mat-icon>mail_outline</mat-icon><span>{{ order.customerEmail || '—' }}</span></div>
+            <div><mat-icon>place</mat-icon><span>{{ order.customerAddress || '—' }}</span></div>
+          </div>
+        </div>
+
+        <div class="card card-pad">
+          <h2 class="section-title">Suivi</h2>
+          <div class="timeline">
+            @for (step of timeline(); track step.label) {
+              <div class="timeline-item">
+                <span class="dot"></span>
+                <div>
+                  <strong>{{ step.label }}</strong>
+                  <small>{{ step.date | date: 'dd/MM/yyyy HH:mm' }}</small>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+    }
+  }
+</div>

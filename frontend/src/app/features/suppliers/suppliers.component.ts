@@ -1,0 +1,202 @@
+import { CommonModule } from '@angular/common';
+import { Component, Inject, OnInit, inject, signal } from '@angular/core';
+import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
+import { MatButtonModule } from '@angular/material/button';
+import { MatDialog, MatDialogModule, MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { debounceTime, distinctUntilChanged } from 'rxjs';
+
+import { Supplier } from '../../core/models/api.models';
+import { AuthService } from '../../core/services/auth.service';
+import { NotificationService } from '../../core/services/notification.service';
+import { SupplierService } from '../../core/services/supplier.service';
+import { ConfirmDialogComponent } from '../../shared/confirm-dialog.component';
+import { PageHeaderComponent } from '../../shared/page-header.component';
+import { PagerComponent } from '../../shared/pager.component';
+
+@Component({
+  selector: 'app-suppliers',
+  standalone: true,
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    MatButtonModule,
+    MatIconModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatProgressSpinnerModule,
+    PageHeaderComponent,
+    PagerComponent
+  ],
+  templateUrl: './suppliers.component.html',
+  styleUrl: '../categories/categories.component.scss'
+})
+export class SuppliersComponent implements OnInit {
+  private readonly service = inject(SupplierService);
+  private readonly notification = inject(NotificationService);
+  private readonly dialog = inject(MatDialog);
+  readonly auth = inject(AuthService);
+
+  readonly search = new FormControl('', { nonNullable: true });
+  readonly items = signal<Supplier[]>([]);
+  readonly loading = signal(true);
+  readonly page = signal(0);
+  readonly totalPages = signal(0);
+  readonly total = signal(0);
+
+  ngOnInit(): void {
+    this.search.valueChanges.pipe(debounceTime(300), distinctUntilChanged()).subscribe(() => this.load(0));
+    this.load(0);
+  }
+
+  load(page = this.page()): void {
+    this.loading.set(true);
+    this.service.list({ page, size: 10, sort: 'name,asc', search: this.search.value }).subscribe({
+      next: (response) => {
+        this.items.set(response.content);
+        this.page.set(response.page);
+        this.totalPages.set(response.totalPages);
+        this.total.set(response.totalElements);
+        this.loading.set(false);
+      },
+      error: () => this.loading.set(false)
+    });
+  }
+
+  openDialog(supplier?: Supplier): void {
+    const ref = this.dialog.open(SupplierFormDialogComponent, {
+      width: '620px',
+      maxWidth: '95vw',
+      data: supplier ?? null
+    });
+    ref.afterClosed().subscribe((saved) => {
+      if (saved) {
+        this.notification.success(supplier ? 'Fournisseur mis à jour.' : 'Fournisseur créé.');
+        this.load(supplier ? this.page() : 0);
+      }
+    });
+  }
+
+  toggle(supplier: Supplier): void {
+    this.service.setStatus(supplier.id, !supplier.active).subscribe(() => {
+      this.notification.success(supplier.active ? 'Fournisseur désactivé.' : 'Fournisseur activé.');
+      this.load();
+    });
+  }
+
+  confirmDelete(supplier: Supplier): void {
+    this.dialog
+      .open(ConfirmDialogComponent, {
+        width: '440px',
+        data: {
+          title: 'Désactiver le fournisseur',
+          message: `Le fournisseur « ${supplier.name} » sera désactivé. Continuer ?`,
+          confirmLabel: 'Désactiver',
+          danger: true
+        }
+      })
+      .afterClosed()
+      .subscribe((confirmed) => {
+        if (confirmed) {
+          this.service.deactivate(supplier.id).subscribe(() => {
+            this.notification.success('Fournisseur désactivé.');
+            this.load();
+          });
+        }
+      });
+  }
+}
+
+@Component({
+  selector: 'app-supplier-form-dialog',
+  standalone: true,
+  imports: [ReactiveFormsModule, MatDialogModule, MatFormFieldModule, MatInputModule, MatButtonModule],
+  template: `
+    <h2 mat-dialog-title>{{ data ? 'Modifier le fournisseur' : 'Nouveau fournisseur' }}</h2>
+    <form [formGroup]="form" (ngSubmit)="submit()">
+      <mat-dialog-content>
+        <div class="dialog-form">
+          <div class="form-grid">
+            <mat-form-field appearance="outline">
+              <mat-label>Nom du contact</mat-label>
+              <input matInput formControlName="name" maxlength="160" />
+              @if (form.controls.name.hasError('required')) {
+                <mat-error>Le nom est obligatoire.</mat-error>
+              }
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Société</mat-label>
+              <input matInput formControlName="company" maxlength="160" />
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Email</mat-label>
+              <input matInput type="email" formControlName="email" />
+              @if (form.controls.email.hasError('email')) {
+                <mat-error>Format d'email invalide.</mat-error>
+              }
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Téléphone</mat-label>
+              <input matInput formControlName="phone" maxlength="40" />
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="full">
+              <mat-label>Adresse</mat-label>
+              <textarea matInput rows="2" formControlName="address" maxlength="300"></textarea>
+            </mat-form-field>
+          </div>
+        </div>
+      </mat-dialog-content>
+      <mat-dialog-actions align="end">
+        <button mat-button type="button" mat-dialog-close>Annuler</button>
+        <button mat-flat-button color="primary" type="submit" [disabled]="saving">
+          {{ data ? 'Enregistrer' : 'Créer' }}
+        </button>
+      </mat-dialog-actions>
+    </form>
+  `
+})
+export class SupplierFormDialogComponent {
+  private readonly service = inject(SupplierService);
+  private readonly fb = inject(FormBuilder);
+  saving = false;
+
+  readonly form = this.fb.nonNullable.group({
+    name: ['', [Validators.required, Validators.maxLength(160)]],
+    company: ['', [Validators.maxLength(160)]],
+    email: ['', [Validators.email]],
+    phone: ['', [Validators.maxLength(40)]],
+    address: ['', [Validators.maxLength(300)]]
+  });
+
+  constructor(
+    private readonly dialogRef: MatDialogRef<SupplierFormDialogComponent, boolean>,
+    @Inject(MAT_DIALOG_DATA) public readonly data: Supplier | null
+  ) {
+    if (data) {
+      this.form.patchValue({
+        name: data.name,
+        company: data.company ?? '',
+        email: data.email ?? '',
+        phone: data.phone ?? '',
+        address: data.address ?? ''
+      });
+    }
+  }
+
+  submit(): void {
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      return;
+    }
+    this.saving = true;
+    const body = this.form.getRawValue();
+    const request = this.data ? this.service.update(this.data.id, body) : this.service.create(body);
+    request.subscribe({
+      next: () => this.dialogRef.close(true),
+      error: () => (this.saving = false)
+    });
+  }
+}

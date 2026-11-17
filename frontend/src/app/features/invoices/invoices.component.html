@@ -1,0 +1,70 @@
+<div class="page">
+  <app-page-header title="Factures" subtitle="Les factures générées automatiquement à la livraison." />
+
+  <div class="card">
+    <div class="toolbar">
+      <mat-form-field appearance="outline" class="search" subscriptSizing="dynamic">
+        <mat-icon matPrefix>search</mat-icon>
+        <input matInput [formControl]="search" placeholder="Numéro, commande, client..." />
+      </mat-form-field>
+    </div>
+
+    @if (loading()) {
+      <div class="loading"><mat-spinner diameter="36" /></div>
+    } @else if (items().length === 0) {
+      <div class="empty-state">
+        <mat-icon>request_quote</mat-icon>
+        <span>Aucune facture. Les factures apparaissent après livraison d'une commande.</span>
+      </div>
+    } @else {
+      <div class="table-wrap">
+        <table class="full-table">
+          <thead>
+            <tr>
+              <th>Numéro</th>
+              <th>Commande</th>
+              <th>Client</th>
+              <th>Total HT</th>
+              <th>TVA</th>
+              <th>Total TTC</th>
+              <th>Émise le</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (invoice of items(); track invoice.id) {
+              <tr>
+                <td><strong>{{ invoice.number }}</strong></td>
+                <td>
+                  <a class="order-link" [routerLink]="['/orders', invoice.orderId]">{{ invoice.orderReference }}</a>
+                </td>
+                <td>
+                  <div class="cell-main">
+                    <span>{{ invoice.customerName }}</span>
+                    <small>{{ invoice.customerCompany || '—' }}</small>
+                  </div>
+                </td>
+                <td class="money">{{ invoice.totalHt | currency: 'EUR' }}</td>
+                <td>{{ invoice.totalVat | currency: 'EUR' }}</td>
+                <td class="money">{{ invoice.totalTtc | currency: 'EUR' }}</td>
+                <td>{{ invoice.issuedAt | date: 'dd/MM/yyyy' }}</td>
+                <td>
+                  <button
+                    mat-stroked-button
+                    type="button"
+                    [disabled]="downloading() === invoice.id"
+                    (click)="download(invoice)"
+                  >
+                    <mat-icon>download</mat-icon>
+                    PDF
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <app-pager [page]="page()" [totalPages]="totalPages()" [total]="total()" (pageChange)="load($event)" />
+    }
+  </div>
+</div>

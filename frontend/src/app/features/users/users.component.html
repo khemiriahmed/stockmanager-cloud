@@ -1,0 +1,84 @@
+<div class="page">
+  <app-page-header title="Utilisateurs" subtitle="Comptes, rôles et accès à l'application.">
+    @if (auth.isAdmin()) {
+      <button mat-flat-button color="primary" type="button" (click)="openDialog()">
+        <mat-icon>person_add</mat-icon>
+        Nouvel utilisateur
+      </button>
+    }
+  </app-page-header>
+
+  <div class="card">
+    <div class="toolbar">
+      <mat-form-field appearance="outline" class="search" subscriptSizing="dynamic">
+        <mat-icon matPrefix>search</mat-icon>
+        <input matInput [formControl]="search" placeholder="Nom ou email..." />
+      </mat-form-field>
+    </div>
+
+    @if (loading()) {
+      <div class="loading"><mat-spinner diameter="36" /></div>
+    } @else if (items().length === 0) {
+      <div class="empty-state">
+        <mat-icon>manage_accounts</mat-icon>
+        <span>Aucun utilisateur trouvé.</span>
+      </div>
+    } @else {
+      <div class="table-wrap">
+        <table class="full-table">
+          <thead>
+            <tr>
+              <th>Utilisateur</th>
+              <th>Email</th>
+              <th>Rôles</th>
+              <th>Statut</th>
+              <th>Créé le</th>
+              @if (auth.isAdmin()) {
+                <th>Actions</th>
+              }
+            </tr>
+          </thead>
+          <tbody>
+            @for (user of items(); track user.id) {
+              <tr>
+                <td>
+                  <div class="user-cell">
+                    <div class="mini-avatar">{{ user.firstName.charAt(0) }}{{ user.lastName.charAt(0) }}</div>
+                    <strong>{{ user.fullName }}</strong>
+                  </div>
+                </td>
+                <td>{{ user.email }}</td>
+                <td>
+                  <div class="role-list">
+                    @for (role of user.roles; track role) {
+                      <span class="role-chip" [ngClass]="roleClass(role)">{{ role }}</span>
+                    }
+                  </div>
+                </td>
+                <td>
+                  <span class="status-badge" [ngClass]="user.active ? 'status-active' : 'status-inactive'">
+                    {{ user.active ? 'Actif' : 'Inactif' }}
+                  </span>
+                </td>
+                <td>{{ user.createdAt | date: 'dd/MM/yyyy' }}</td>
+                @if (auth.isAdmin()) {
+                  <td>
+                    <div class="actions-cell">
+                      <button mat-icon-button type="button" (click)="openDialog(user)" aria-label="Modifier">
+                        <mat-icon>edit</mat-icon>
+                      </button>
+                      <button mat-icon-button type="button" (click)="toggle(user)" aria-label="Changer le statut">
+                        <mat-icon>{{ user.active ? 'toggle_on' : 'toggle_off' }}</mat-icon>
+                      </button>
+                    </div>
+                  </td>
+                }
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <app-pager [page]="page()" [totalPages]="totalPages()" [total]="total()" (pageChange)="load($event)" />
+    }
+  </div>
+</div>

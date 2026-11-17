@@ -1,0 +1,180 @@
+<div class="page">
+  <app-page-header
+    title="Tableau de bord"
+    [subtitle]="'Bonjour ' + (auth.user()?.firstName ?? '') + ', voici la situation de votre activité.'"
+  >
+    <a mat-stroked-button routerLink="/orders">
+      <mat-icon>receipt_long</mat-icon>
+      Commandes
+    </a>
+    <a mat-flat-button color="primary" routerLink="/orders">
+      <mat-icon>add</mat-icon>
+      Nouvelle commande
+    </a>
+  </app-page-header>
+
+  @if (loading) {
+    <div class="loading"><mat-spinner diameter="42" /></div>
+  } @else if (overview) {
+    <section class="kpi-grid">
+      <div class="kpi card">
+        <div class="kpi-icon blue"><mat-icon>inventory_2</mat-icon></div>
+        <div>
+          <span class="kpi-label">Produits actifs</span>
+          <strong class="kpi-value">{{ overview.products | number }}</strong>
+        </div>
+      </div>
+      <div class="kpi card">
+        <div class="kpi-icon green"><mat-icon>payments</mat-icon></div>
+        <div>
+          <span class="kpi-label">Valeur du stock</span>
+          <strong class="kpi-value">{{ overview.stockValue | currency: 'EUR' : 'symbol' : '1.0-0' }}</strong>
+        </div>
+      </div>
+      <div class="kpi card">
+        <div class="kpi-icon orange"><mat-icon>warning_amber</mat-icon></div>
+        <div>
+          <span class="kpi-label">Alertes stock</span>
+          <strong class="kpi-value">{{ overview.lowStockProducts | number }}</strong>
+          <span class="kpi-hint">{{ overview.outOfStock }} en rupture</span>
+        </div>
+      </div>
+      <div class="kpi card">
+        <div class="kpi-icon violet"><mat-icon>pending_actions</mat-icon></div>
+        <div>
+          <span class="kpi-label">Commandes en cours</span>
+          <strong class="kpi-value">{{ overview.pendingOrders | number }}</strong>
+          <span class="kpi-hint">{{ overview.orders }} au total</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="main-grid">
+      <mat-card class="chart-card" appearance="outlined">
+        <div class="card-head">
+          <div>
+            <h2>Activité des 12 derniers mois</h2>
+            <p>Chiffre d'affaires facturé et volume de commandes</p>
+          </div>
+          <mat-icon class="head-icon">insights</mat-icon>
+        </div>
+        <div class="chart-wrap">
+          <canvas #salesCanvas></canvas>
+        </div>
+      </mat-card>
+
+      <mat-card class="status-card" appearance="outlined">
+        <div class="card-head">
+          <div>
+            <h2>Commandes par statut</h2>
+            <p>Répartition du pipeline commercial</p>
+          </div>
+        </div>
+        <div class="status-list">
+          @for (entry of overview.ordersByStatus | keyvalue; track entry.key) {
+            <div class="status-row">
+              <span class="status-badge" [ngClass]="'status-' + entry.key.toLowerCase()">
+                {{ statusLabel(entry.key) }}
+              </span>
+              <strong>{{ entry.value | number }}</strong>
+            </div>
+          }
+        </div>
+        <div class="mini-stats">
+          <div><span>Clients</span><strong>{{ overview.customers }}</strong></div>
+          <div><span>Fournisseurs</span><strong>{{ overview.suppliers }}</strong></div>
+          <div><span>Entrepôts</span><strong>{{ overview.warehouses }}</strong></div>
+        </div>
+      </mat-card>
+    </section>
+
+    <section class="bottom-grid">
+      <mat-card appearance="outlined">
+        <div class="card-head">
+          <div>
+            <h2>Alertes de stock</h2>
+            <p>Produits à réapprovisionner en priorité</p>
+          </div>
+          <a mat-button color="primary" routerLink="/stocks">Tout voir</a>
+        </div>
+        @if (overview.lowStock.length === 0) {
+          <div class="empty-state">
+            <mat-icon>check_circle</mat-icon>
+            Aucun produit sous le seuil d'alerte.
+          </div>
+        } @else {
+          <div class="table-wrap">
+            <table class="full-table">
+              <thead>
+                <tr>
+                  <th>Produit</th>
+                  <th>Entrepôt</th>
+                  <th>Disponible</th>
+                  <th>Seuil</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (stock of overview.lowStock; track stock.id) {
+                  <tr>
+                    <td>
+                      <div class="cell-main">
+                        <strong>{{ stock.productName }}</strong>
+                        <small>{{ stock.productReference }}</small>
+                      </div>
+                    </td>
+                    <td>{{ stock.warehouseName }}</td>
+                    <td><span class="qty danger">{{ stock.availableQuantity }}</span></td>
+                    <td>{{ stock.alertThreshold }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </mat-card>
+
+      <mat-card appearance="outlined">
+        <div class="card-head">
+          <div>
+            <h2>Dernières commandes</h2>
+            <p>Suivi des opérations récentes</p>
+          </div>
+          <a mat-button color="primary" routerLink="/orders">Tout voir</a>
+        </div>
+        @if (overview.recentOrders.length === 0) {
+          <div class="empty-state">
+            <mat-icon>receipt_long</mat-icon>
+            Aucune commande pour le moment.
+          </div>
+        } @else {
+          <div class="table-wrap">
+            <table class="full-table">
+              <thead>
+                <tr>
+                  <th>Référence</th>
+                  <th>Client</th>
+                  <th>Statut</th>
+                  <th>Total TTC</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (order of overview.recentOrders; track order.id) {
+                  <tr class="clickable" [routerLink]="['/orders', order.id]">
+                    <td><strong>{{ order.reference }}</strong></td>
+                    <td>{{ order.customerName }}</td>
+                    <td>
+                      <span class="status-badge" [ngClass]="'status-' + order.status.toLowerCase()">
+                        {{ statusLabel(order.status) }}
+                      </span>
+                    </td>
+                    <td class="money">{{ order.totalTtc | currency: 'EUR' }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </mat-card>
+    </section>
+  }
+</div>

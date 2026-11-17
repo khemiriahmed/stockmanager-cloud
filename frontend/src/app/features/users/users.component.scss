@@ -1,0 +1,47 @@
+.user-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.mini-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #e8eefb;
+  color: #33507f;
+  font-size: 11px;
+  font-weight: 700;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+}
+
+.role-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.role-chip {
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+}
+
+.role-admin {
+  background: #efe8ff;
+  color: #6f42c1;
+}
+
+.role-manager {
+  background: #e7f0ff;
+  color: #2b5cd9;
+}
+
+.role-employee {
+  background: #eef2f9;
+  color: #51617f;
+}
