@@ -29,9 +29,9 @@ npm-debug.log*
 yarn-error.log*
 
 # ---------- Runtime data ----------
-storage/
-infrastructure/docker/storage/
-postgres-data/
+/storage/
+/infrastructure/docker/storage/
+/postgres-data/
 *.pid
 
 # ---------- Misc ----------
