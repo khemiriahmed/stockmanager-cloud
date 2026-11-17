@@ -1,0 +1,83 @@
+<div class="page">
+  <app-page-header title="Commandes" subtitle="Du brouillon à la livraison, avec réservation automatique du stock.">
+    <button mat-flat-button color="primary" type="button" (click)="openCreate()">
+      <mat-icon>add</mat-icon>
+      Nouvelle commande
+    </button>
+  </app-page-header>
+
+  <div class="card">
+    <div class="toolbar">
+      <mat-form-field appearance="outline" class="search" subscriptSizing="dynamic">
+        <mat-icon matPrefix>search</mat-icon>
+        <input matInput [formControl]="search" placeholder="Référence, client..." />
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="filter" subscriptSizing="dynamic">
+        <mat-label>Statut</mat-label>
+        <mat-select [formControl]="statusFilter">
+          <mat-option value="ALL">Tous</mat-option>
+          <mat-option value="DRAFT">Brouillons</mat-option>
+          <mat-option value="CONFIRMED">Confirmées</mat-option>
+          <mat-option value="PROCESSING">En préparation</mat-option>
+          <mat-option value="SHIPPED">Expédiées</mat-option>
+          <mat-option value="DELIVERED">Livrées</mat-option>
+          <mat-option value="CANCELLED">Annulées</mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+
+    @if (loading()) {
+      <div class="loading"><mat-spinner diameter="36" /></div>
+    } @else if (items().length === 0) {
+      <div class="empty-state">
+        <mat-icon>receipt_long</mat-icon>
+        <span>Aucune commande trouvée.</span>
+      </div>
+    } @else {
+      <div class="table-wrap">
+        <table class="full-table">
+          <thead>
+            <tr>
+              <th>Référence</th>
+              <th>Client</th>
+              <th>Statut</th>
+              <th>Lignes</th>
+              <th>Total HT</th>
+              <th>Total TTC</th>
+              <th>Créée le</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (order of items(); track order.id) {
+              <tr class="clickable" [routerLink]="['/orders', order.id]">
+                <td><strong>{{ order.reference }}</strong></td>
+                <td>
+                  <div class="cell-main">
+                    <span>{{ order.customerName }}</span>
+                    <small>{{ order.customerCompany || '—' }}</small>
+                  </div>
+                </td>
+                <td>
+                  <span class="status-badge" [ngClass]="'status-' + order.status.toLowerCase()">
+                    {{ statusLabel(order.status) }}
+                  </span>
+                </td>
+                <td>{{ order.itemCount }}</td>
+                <td class="money">{{ order.totalHt | currency: 'EUR' }}</td>
+                <td class="money">{{ order.totalTtc | currency: 'EUR' }}</td>
+                <td>{{ order.createdAt | date: 'dd/MM/yyyy HH:mm' }}</td>
+                <td>
+                  <button mat-icon-button type="button" aria-label="Voir le détail">
+                    <mat-icon>chevron_right</mat-icon>
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <app-pager [page]="page()" [totalPages]="totalPages()" [total]="total()" (pageChange)="load($event)" />
+    }
+  </div>
+</div>
