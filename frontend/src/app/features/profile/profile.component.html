@@ -1,0 +1,80 @@
+<div class="page">
+  <app-page-header title="Mon profil" subtitle="Gérez vos informations personnelles et votre mot de passe." />
+
+  @if (loading()) {
+    <div class="loading"><mat-spinner diameter="42" /></div>
+  } @else {
+    @if (user(); as user) {
+    <div class="profile-grid">
+      <div class="card card-pad identity">
+        <div class="big-avatar">{{ user.firstName.charAt(0) }}{{ user.lastName.charAt(0) }}</div>
+        <h2>{{ user.fullName }}</h2>
+        <span class="email">{{ user.email }}</span>
+        <div class="role-list">
+          @for (role of user.roles; track role) {
+            <span class="role-chip" [ngClass]="roleClass(role)">{{ role }}</span>
+          }
+        </div>
+        <div class="meta">
+          <div><mat-icon>calendar_today</mat-icon><span>Membre depuis {{ user.createdAt | date: 'MMMM yyyy' }}</span></div>
+          <div><mat-icon>verified_user</mat-icon><span>{{ user.active ? 'Compte actif' : 'Compte inactif' }}</span></div>
+        </div>
+      </div>
+
+      <div class="forms">
+        <div class="card card-pad">
+          <h2 class="section-title">Informations personnelles</h2>
+          <form [formGroup]="profileForm" (ngSubmit)="saveProfile()" class="form-grid">
+            <mat-form-field appearance="outline">
+              <mat-label>Prénom</mat-label>
+              <input matInput formControlName="firstName" maxlength="80" />
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Nom</mat-label>
+              <input matInput formControlName="lastName" maxlength="80" />
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="full">
+              <mat-label>Email</mat-label>
+              <input matInput [value]="user.email" disabled />
+            </mat-form-field>
+            <div class="full form-actions">
+              <button mat-flat-button color="primary" type="submit" [disabled]="savingProfile()">
+                Enregistrer
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <div class="card card-pad">
+          <h2 class="section-title">Sécurité</h2>
+          <form [formGroup]="passwordForm" (ngSubmit)="changePassword()" class="form-grid">
+            <mat-form-field appearance="outline" class="full">
+              <mat-label>Mot de passe actuel</mat-label>
+              <input matInput type="password" formControlName="currentPassword" autocomplete="current-password" />
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Nouveau mot de passe</mat-label>
+              <input matInput type="password" formControlName="newPassword" autocomplete="new-password" />
+              @if (passwordForm.controls.newPassword.hasError('minlength')) {
+                <mat-error>8 caractères minimum.</mat-error>
+              }
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Confirmation</mat-label>
+              <input matInput type="password" formControlName="confirmPassword" autocomplete="new-password" />
+              @if (passwordForm.hasError('mismatch')) {
+                <mat-error>Les mots de passe ne correspondent pas.</mat-error>
+              }
+            </mat-form-field>
+            <div class="full form-actions">
+              <button mat-stroked-button color="primary" type="submit" [disabled]="savingPassword()">
+                Modifier le mot de passe
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    }
+  }
+</div>
