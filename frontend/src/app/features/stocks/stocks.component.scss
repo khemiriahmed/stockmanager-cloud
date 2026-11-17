@@ -1,0 +1,47 @@
+.danger-text {
+  color: #c92a2a;
+  font-weight: 700;
+}
+
+.muted {
+  color: #6b7a99;
+}
+
+.tab-warning {
+  color: #b26a00;
+}
+
+.move-badge {
+  display: inline-block;
+  padding: 3px 9px;
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.move-in {
+  background: #e6f9f1;
+  color: #0c8f6a;
+}
+
+.move-out {
+  background: #fdecec;
+  color: #c92a2a;
+}
+
+.move-transfer {
+  background: #e7f0ff;
+  color: #2b5cd9;
+}
+
+.move-adjustment {
+  background: #fff4e0;
+  color: #b26a00;
+}
+
+:host ::ng-deep .mat-mdc-tab-body-content {
+  overflow: hidden;
+}
