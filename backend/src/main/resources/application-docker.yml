@@ -1,0 +1,8 @@
+logging:
+  level:
+    com.stockmanager: INFO
+    org.flywaydb: INFO
+
+app:
+  seed:
+    demo-enabled: ${SEED_DEMO_DATA:false}
