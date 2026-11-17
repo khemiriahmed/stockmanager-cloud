@@ -1,0 +1,78 @@
+<mat-sidenav-container class="shell">
+  <mat-sidenav
+    #sidenav
+    class="sidenav"
+    [mode]="isHandset() ? 'over' : 'side'"
+    [opened]="opened()"
+    (closedStart)="opened.set(false)"
+  >
+    <div class="brand">
+      <div class="brand-icon"><mat-icon>inventory_2</mat-icon></div>
+      <div class="brand-text">
+        <strong>StockManager</strong>
+        <span>Cloud</span>
+      </div>
+    </div>
+
+    <div class="company">
+      <mat-icon>storefront</mat-icon>
+      <div>
+        <span class="company-name">Espace de gestion</span>
+        <span class="company-plan">Stock · Ventes · Facturation</span>
+      </div>
+    </div>
+
+    <mat-nav-list class="nav">
+      @for (item of navItems(); track item.path) {
+        <a
+          mat-list-item
+          [routerLink]="item.path"
+          routerLinkActive="active-link"
+          [routerLinkActiveOptions]="{ exact: false }"
+          (click)="onNavigate()"
+        >
+          <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
+          <span matListItemTitle>{{ item.label }}</span>
+        </a>
+      }
+    </mat-nav-list>
+
+    <div class="sidenav-footer">
+      <mat-icon>verified_user</mat-icon>
+      <span>Données sécurisées</span>
+    </div>
+  </mat-sidenav>
+
+  <mat-sidenav-content class="shell-content">
+    <mat-toolbar class="topbar">
+      <button mat-icon-button type="button" (click)="toggle()" aria-label="Afficher ou masquer le menu">
+        <mat-icon>{{ opened() ? 'menu_open' : 'menu' }}</mat-icon>
+      </button>
+      <span class="toolbar-title">StockManager Cloud</span>
+      <span class="spacer"></span>
+      <span class="role-chip">{{ primaryRole() }}</span>
+      <button mat-icon-button type="button" class="avatar-button" [matMenuTriggerFor]="userMenu" aria-label="Menu utilisateur">
+        <span class="avatar">{{ initials() }}</span>
+      </button>
+      <mat-menu #userMenu="matMenu" xPosition="before">
+        <div class="menu-user">
+          <strong>{{ user()?.fullName }}</strong>
+          <small>{{ user()?.email }}</small>
+        </div>
+        <mat-divider />
+        <button mat-menu-item type="button" routerLink="/profile">
+          <mat-icon>person</mat-icon>
+          <span>Mon profil</span>
+        </button>
+        <button mat-menu-item type="button" (click)="logout()">
+          <mat-icon>logout</mat-icon>
+          <span>Se déconnecter</span>
+        </button>
+      </mat-menu>
+    </mat-toolbar>
+
+    <main class="content">
+      <router-outlet />
+    </main>
+  </mat-sidenav-content>
+</mat-sidenav-container>
