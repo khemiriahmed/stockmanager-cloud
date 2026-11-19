@@ -27,7 +27,6 @@ frontend/.angular/
 frontend/coverage/
 npm-debug.log*
 yarn-error.log*
-
 # ---------- Runtime data ----------
 /storage/
 /infrastructure/docker/storage/
