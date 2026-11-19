@@ -5,21 +5,18 @@ Thumbs.db
 *.iml
 .vscode/
 *.swp
-
 # ---------- Env / secrets ----------
 .env
 .env.local
 .env.*.local
 *.pem
 *.key
-
 # ---------- Java / Maven ----------
 backend/target/
 backend/.mvn/wrapper/maven-wrapper.jar
 *.class
 *.log
 hs_err_pid*
-
 # ---------- Angular / Node ----------
 frontend/node_modules/
 frontend/dist/
@@ -32,7 +29,6 @@ yarn-error.log*
 /infrastructure/docker/storage/
 /postgres-data/
 *.pid
-
 # ---------- Misc ----------
 .tmp/
 tmp/
